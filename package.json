@@ -1,19 +1,22 @@
 {
-  "name": "com.template.package",
-  "displayName": "Template Package",
+  "name": "yueby.tools.mirror-tool",
+  "displayName": "◆ Mirror Tool",
   "version": "0.0.1",
-  "unity": "2022.3",
-  "description": "A template package for Unity",
+  "description": "A mirror tool for GameObjects.",
   "author": {
-    "name": "Your Name",
-    "email": "your.email@example.com"
+    "name": "Yueby",
+    "email": "yueby_sp@qq.com"
   },
   "keywords": [
-    "unity",
-    "package",
-    "template"
+    "yueby",
+    "tool",
+    "mirror-tool",
+    "mirror",
+    "yueby tools"
   ],
-  "unityRelease": "22f1",
+  "unity": "2022.3",
   "vpmDependencies": {
-  }
-} 
+    "yueby.tools.editor-core": ">=0.0.5"
+  },
+  "unityRelease": "22f1"
+}
