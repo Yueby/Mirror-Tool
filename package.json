@@ -1,7 +1,7 @@
 {
   "name": "yueby.tools.mirror-tool",
   "displayName": "◆ Mirror Tool",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "A mirror tool for GameObjects.",
   "author": {
     "name": "Yueby",
@@ -16,7 +16,7 @@
   ],
   "unity": "2022.3",
   "vpmDependencies": {
-    "yueby.tools.editor-core": ">=0.0.5"
+    "yueby.tools.editor-core": ">=1.0.0"
   },
   "unityRelease": "22f1"
 }
