@@ -1,0 +1,19 @@
+{
+  "name": "com.template.package",
+  "displayName": "Template Package",
+  "version": "0.0.1",
+  "unity": "2022.3",
+  "description": "A template package for Unity",
+  "author": {
+    "name": "Your Name",
+    "email": "your.email@example.com"
+  },
+  "keywords": [
+    "unity",
+    "package",
+    "template"
+  ],
+  "unityRelease": "22f1",
+  "vpmDependencies": {
+  }
+} 
