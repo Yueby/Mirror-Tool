@@ -70,7 +70,7 @@ namespace Yueby
             LoadConfigs();
         }
 
-        [MenuItem("Tools/YuebyTools/Utils/Toggle Mirror Tool %#m", false, 1)]
+        [MenuItem("Tools/YuebyTools/Utils/Mirror Tool (Toggle) %#m", false, 1)]
         private static void ToggleTool()
         {
             isEnabled = !isEnabled;
