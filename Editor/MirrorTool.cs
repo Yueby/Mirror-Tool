@@ -70,7 +70,7 @@ namespace Yueby
             LoadConfigs();
         }
 
-        [MenuItem("Tools/YuebyTools/Utils/Mirror Tool (Toggle) %#m", false, 1)]
+        [MenuItem("Tools/YuebyTools/Mirror Tool %#m", false)]
         private static void ToggleTool()
         {
             isEnabled = !isEnabled;
@@ -91,10 +91,10 @@ namespace Yueby
             SceneView.RepaintAll();
         }
 
-        [MenuItem("Tools/YuebyTools/Utils/Toggle Mirror Tool %#m", true)]
+        [MenuItem("Tools/YuebyTools/Mirror Tool %#m", true)]
         private static bool ValidateToggleTool()
         {
-            Menu.SetChecked("Tools/YuebyTools/Utils/Toggle Mirror Tool %#m", isEnabled);
+            Menu.SetChecked("Tools/YuebyTools/Mirror Tool %#m", isEnabled);
             return true;
         }
 
