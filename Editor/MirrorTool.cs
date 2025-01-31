@@ -6,7 +6,6 @@ using Yueby.Core.Utils;
 using Yueby.Utils;
 using Yueby.ModalWindow;
 
-
 namespace Yueby
 {
     [InitializeOnLoad]
@@ -239,14 +238,61 @@ namespace Yueby
                             Vector3 upDir = Tools.pivotRotation == PivotRotation.Local ? targetObj.transform.up : Vector3.up;
                             Vector3 forwardDir = Tools.pivotRotation == PivotRotation.Local ? targetObj.transform.forward : Vector3.forward;
 
-                            Handles.color = Color.red;
-                            Handles.ArrowHandleCap(0, targetPos, Quaternion.LookRotation(rightDir), handleSize * 2f, EventType.Repaint);
+                            // 根据当前工具类型显示不同的handle样式
+                            switch (Tools.current)
+                            {
+                                case Tool.Move:
+                                    // 保持原有的箭头样式
+                                    Handles.color = Color.red;
+                                    Handles.ArrowHandleCap(0, targetPos, Quaternion.LookRotation(rightDir), handleSize * 2f, EventType.Repaint);
+                                    Handles.color = Color.green;
+                                    Handles.ArrowHandleCap(0, targetPos, Quaternion.LookRotation(upDir), handleSize * 2f, EventType.Repaint);
+                                    Handles.color = Color.blue;
+                                    Handles.ArrowHandleCap(0, targetPos, Quaternion.LookRotation(forwardDir), handleSize * 2f, EventType.Repaint);
+                                    break;
 
-                            Handles.color = Color.green;
-                            Handles.ArrowHandleCap(0, targetPos, Quaternion.LookRotation(upDir), handleSize * 2f, EventType.Repaint);
+                                case Tool.Rotate:
+                                    // 显示旋转环
+                                    Handles.color = Color.red;
+                                    Handles.CircleHandleCap(0, targetPos, Quaternion.LookRotation(rightDir), handleSize * 2f, EventType.Repaint);
+                                    Handles.color = Color.green;
+                                    Handles.CircleHandleCap(0, targetPos, Quaternion.LookRotation(upDir), handleSize * 2f, EventType.Repaint);
+                                    Handles.color = Color.blue;
+                                    Handles.CircleHandleCap(0, targetPos, Quaternion.LookRotation(forwardDir), handleSize * 2f, EventType.Repaint);
+                                    break;
 
-                            Handles.color = Color.blue;
-                            Handles.ArrowHandleCap(0, targetPos, Quaternion.LookRotation(forwardDir), handleSize * 2f, EventType.Repaint);
+                                case Tool.Scale:
+                                    // 显示缩放立方体
+                                    float cubeSize = handleSize * 0.5f;
+                                    float offset = handleSize * 2f;
+                                    
+                                    // 始终使用本地坐标系计算位置
+                                    Vector3 rightPos = targetPos + targetObj.transform.right * offset;
+                                    Vector3 upPos = targetPos + targetObj.transform.up * offset;
+                                    Vector3 forwardPos = targetPos + targetObj.transform.forward * offset;
+                                    
+                                    // 始终使用本地空间的旋转
+                                    Quaternion rightRot = targetObj.transform.rotation * Quaternion.FromToRotation(Vector3.forward, Vector3.right);
+                                    Quaternion upRot = targetObj.transform.rotation * Quaternion.FromToRotation(Vector3.forward, Vector3.up);
+                                    Quaternion forwardRot = targetObj.transform.rotation;
+                                    
+                                    // 绘制连接线
+                                    Handles.color = new Color(1f, 0f, 0f, 0.8f);
+                                    Handles.DrawLine(targetPos, rightPos);
+                                    Handles.color = new Color(0f, 1f, 0f, 0.8f);
+                                    Handles.DrawLine(targetPos, upPos);
+                                    Handles.color = new Color(0f, 0f, 1f, 0.8f);
+                                    Handles.DrawLine(targetPos, forwardPos);
+                                    
+                                    // 绘制缩放方块
+                                    Handles.color = Color.red;
+                                    Handles.CubeHandleCap(0, rightPos, rightRot, cubeSize, EventType.Repaint);
+                                    Handles.color = Color.green;
+                                    Handles.CubeHandleCap(0, upPos, upRot, cubeSize, EventType.Repaint);
+                                    Handles.color = Color.blue;
+                                    Handles.CubeHandleCap(0, forwardPos, forwardRot, cubeSize, EventType.Repaint);
+                                    break;
+                            }
 
                             Handles.color = new Color(1f, 1f, 1f, 0.5f);
                             Handles.DrawDottedLine(currentSelectedObject.transform.position, targetPos, 2f);
@@ -471,19 +517,39 @@ namespace Yueby
                             else if (Event.current.type == EventType.DragPerform)
                             {
                                 DragAndDrop.AcceptDrag();
-                                foreach (var obj in DragAndDrop.objectReferences)
+                                
+                                // 获取拖拽的对象列表
+                                var draggedObjects = DragAndDrop.objectReferences
+                                    .Where(obj => obj is GameObject)
+                                    .Cast<GameObject>()
+                                    .ToList();
+                                    
+                                if (draggedObjects.Any())
                                 {
-                                    if (obj is GameObject gameObj)
+                                    // 构建确认消息
+                                    string message = draggedObjects.Count == 1 
+                                        ? $"Add '{draggedObjects[0].name}' to mirror list?" 
+                                        : $"Add {draggedObjects.Count} objects to mirror list?";
+                                        
+                                    // 显示确认对话框
+                                    if (EditorUtility.DisplayDialog(
+                                        "Add Mirror Objects",
+                                        message,
+                                        "Add",
+                                        "Cancel"))
                                     {
-                                        string targetPath = GetObjectPath(gameObj);
-                                        if (!config.targetObjectPaths.Contains(targetPath))
+                                        foreach (var gameObj in draggedObjects)
                                         {
-                                            config.targetObjectPaths.Add(targetPath);
-                                            EstablishMirrorConnection(currentSelectedObject, gameObj, config.mirrorAxis);
+                                            string targetPath = GetObjectPath(gameObj);
+                                            if (!config.targetObjectPaths.Contains(targetPath))
+                                            {
+                                                config.targetObjectPaths.Add(targetPath);
+                                                EstablishMirrorConnection(currentSelectedObject, gameObj, config.mirrorAxis);
+                                            }
                                         }
+                                        SaveConfigs();
                                     }
                                 }
-                                SaveConfigs();
                                 Event.current.Use();
                             }
                         }
