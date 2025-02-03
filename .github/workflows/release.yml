@@ -1,50 +1,13 @@
 name: Build Release
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  release:
     permissions:
       contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Get Version
-        id: version
-        run: |
-          echo "version=$(cat package.json | jq -r .version)" >> $GITHUB_OUTPUT
-          if [ "${{ vars.PACKAGE_NAME }}" == "" ]; then
-            echo "Error: PACKAGE_NAME not set in repository variables"
-            exit 1
-          fi
-    
-      - name: Set Environment Variables
-        run: |
-          echo "zipFile=${{ vars.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.zip" >> $GITHUB_ENV
-          echo "unityPackage=${{ vars.PACKAGE_NAME }}-${{ steps.version.outputs.version }}.unitypackage" >> $GITHUB_ENV
-
-      - name: Create Package Zip
-        run: zip -r "${{ github.workspace }}/${{ env.zipFile }}" .
-      
-      - name: Track Package Meta Files
-        run: find . -name \*.meta >> metaList
-      
-      - name: Create UnityPackage
-        uses: pCYSl5EDgo/create-unitypackage@v1.2.3
-        with:
-          package-path: ${{ env.unityPackage }}
-          include-files: metaList
-      
-      - name: Make Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body_path: CHANGELOG.md
-          files: |
-            ${{ env.zipFile }}
-            ${{ env.unityPackage }}
-            package.json
-          tag_name: ${{ steps.version.outputs.version }} 
+      pull-requests: read
+    uses: Yueby/shared-workflows/.github/workflows/unity-package-release.yml@main
+    with:
+      package-name: ${{ vars.PACKAGE_NAME }}
