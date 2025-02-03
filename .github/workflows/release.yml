@@ -16,7 +16,17 @@ jobs:
         needs: release
         runs-on: ubuntu-latest
         steps:
+            - name: Check PAT
+              id: check_pat
+              continue-on-error: true
+              run: |
+                if [ -z "${{ secrets.PAT }}" ]; then
+                  echo "PAT is not configured, skipping workflow triggers"
+                  exit 1
+                fi
+
             - name: Trigger Workflows
+              if: steps.check_pat.outcome == 'success'
               uses: actions/github-script@v7
               env:
                 PAT_CONFIG: ${{ secrets.PAT }}
