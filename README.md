@@ -10,6 +10,7 @@ A powerful Unity editor tool for creating and managing mirrored objects in scene
 - 🎯 Multi-axis Mirroring (X/Y/Z)
 - 🎨 Visual Editing Interface
 - 💾 Auto-save Configuration
+- 💾 Window Position Memory
 - ⌨️ Shortcut Support (Ctrl+Shift+M)
 
 ## Installation

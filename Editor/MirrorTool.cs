@@ -19,6 +19,7 @@ namespace Yueby
         private static Rect windowRect;
         private static readonly string configPath;
         private static readonly string enableKey = "MirrorTool_Enabled";
+        private static readonly string windowSettingsKey = "MirrorTool_WindowSettings";
         private static bool isEnabled;
         private static bool showMirrorAxis = true;
         private static PivotRotation lastPivotRotation;
@@ -55,6 +56,25 @@ namespace Yueby
             }
         }
 
+        [System.Serializable]
+        private class WindowSettings
+        {
+            public float windowPosX = 50;
+            public float windowPosY = 10;
+            public float detailWindowPosX = 0;
+            public float detailWindowPosY = 0;
+            public bool detailWindowVisible = false;
+
+            public WindowSettings()
+            {
+                windowPosX = 50;
+                windowPosY = 10;
+                detailWindowPosX = 0;
+                detailWindowPosY = 0;
+                detailWindowVisible = false;
+            }
+        }
+
         static MirrorTool()
         {
             string projectPath = Application.dataPath;
@@ -62,6 +82,7 @@ namespace Yueby
             configPath = System.IO.Path.Combine(projectPath, "ProjectSettings", "MirrorTool.json");
 
             isEnabled = EditorPrefs.GetBool(enableKey, false);
+            LoadWindowSettings();
             if (isEnabled)
             {
                 SceneView.duringSceneGui += OnSceneGUI;
@@ -184,8 +205,15 @@ namespace Yueby
             if (currentSelectedObject != selectedObject)
             {
                 currentSelectedObject = selectedObject;
-                windowPosition = new Vector2(10, 10);
-                windowRect = new Rect(windowPosition, mainWindowSize);
+                if (windowRect.width == 0 || windowRect.height == 0)
+                {
+                    windowPosition = new Vector2(50, 10);
+                    windowRect = new Rect(windowPosition, mainWindowSize);
+                }
+                else
+                {
+                    windowRect = new Rect(windowPosition, mainWindowSize);
+                }
                 isWindowVisible = true;
 
                 // 初始化或更新目标列表
@@ -203,7 +231,12 @@ namespace Yueby
             Handles.BeginGUI();
 
             // 绘制主窗口
+            Vector2 oldWindowPos = windowRect.position;
             windowRect = GUILayout.Window(0, windowRect, DrawMirrorWindow, "Mirror Tool");
+            if (windowRect.position != oldWindowPos)
+            {
+                SaveWindowSettings();
+            }
             windowPosition = windowRect.position;
 
             // 更新并绘制详情窗口
@@ -214,8 +247,14 @@ namespace Yueby
                     float detailX = windowRect.x + windowRect.width + 5;
                     detailWindowRect = new Rect(detailX, windowRect.y, detailWindowSize.x, detailWindowSize.y);
                     needUpdateDetailPosition = false;
+                    SaveWindowSettings();
                 }
+                Vector2 oldDetailPos = detailWindowRect.position;
                 detailWindowRect = GUILayout.Window(1, detailWindowRect, DrawDetailWindow, "Mirror Details");
+                if (detailWindowRect.position != oldDetailPos)
+                {
+                    SaveWindowSettings();
+                }
             }
 
             Handles.EndGUI();
@@ -425,12 +464,14 @@ namespace Yueby
                 {
                     needUpdateDetailPosition = true;
                 }
+                SaveWindowSettings();
             }
 
             // 关闭按钮
             if (DrawCloseButton(windowRect))
             {
                 isWindowVisible = false;
+                SaveWindowSettings();
                 return;
             }
 
@@ -567,6 +608,7 @@ namespace Yueby
             if (DrawCloseButton(detailWindowRect))
             {
                 isDetailWindowVisible = false;
+                SaveWindowSettings();
                 return;
             }
 
@@ -642,36 +684,21 @@ namespace Yueby
 
         private static void SaveConfigs()
         {
-            try
-            {
-                CleanEmptyConfigs();
-                string json = JsonUtility.ToJson(new SerializableDict(mirrorConfigs), true);
-                System.IO.File.WriteAllText(configPath, json);
-            }
-            catch (System.Exception e)
-            {
-                YuebyLogger.LogError($"Failed to save Mirror Tool config: {e.Message}");
-            }
+            CleanEmptyConfigs();
+            string json = JsonUtility.ToJson(new SerializableDict(mirrorConfigs), true);
+            System.IO.File.WriteAllText(configPath, json);
         }
 
         private static void LoadConfigs()
         {
-            try
+            if (System.IO.File.Exists(configPath))
             {
-                if (System.IO.File.Exists(configPath))
-                {
-                    string json = System.IO.File.ReadAllText(configPath);
-                    SerializableDict serializableDict = JsonUtility.FromJson<SerializableDict>(json);
-                    mirrorConfigs = serializableDict.ToDictionary();
-                }
-                else
-                {
-                    mirrorConfigs = new Dictionary<string, MirrorConfig>();
-                }
+                string json = System.IO.File.ReadAllText(configPath);
+                SerializableDict serializableDict = JsonUtility.FromJson<SerializableDict>(json);
+                mirrorConfigs = serializableDict.ToDictionary();
             }
-            catch (System.Exception e)
+            else
             {
-                YuebyLogger.LogError($"Failed to load Mirror Tool config: {e.Message}");
                 mirrorConfigs = new Dictionary<string, MirrorConfig>();
             }
         }
@@ -741,6 +768,49 @@ namespace Yueby
             {
                 mirrorConfigs.Remove(key);
             }
+        }
+
+        private static void LoadWindowSettings()
+        {
+            string json = EditorPrefs.GetString(windowSettingsKey, "");
+            if (!string.IsNullOrEmpty(json))
+            {
+                WindowSettings settings = JsonUtility.FromJson<WindowSettings>(json);
+                
+                windowPosition = new Vector2(settings.windowPosX, settings.windowPosY);
+                windowRect = new Rect(windowPosition, mainWindowSize);
+                
+                isDetailWindowVisible = settings.detailWindowVisible;
+                if (settings.detailWindowPosX > 0 && settings.detailWindowPosY > 0)
+                {
+                    detailWindowRect = new Rect(settings.detailWindowPosX, settings.detailWindowPosY, detailWindowSize.x, detailWindowSize.y);
+                }
+                else
+                {
+                    detailWindowRect = new Rect(windowPosition.x + mainWindowSize.x + 5, windowPosition.y, detailWindowSize.x, detailWindowSize.y);
+                }
+            }
+            else
+            {
+                windowPosition = new Vector2(50, 10);
+                windowRect = new Rect(windowPosition, mainWindowSize);
+                detailWindowRect = new Rect(windowPosition.x + mainWindowSize.x + 5, windowPosition.y, detailWindowSize.x, detailWindowSize.y);
+            }
+        }
+
+        private static void SaveWindowSettings()
+        {
+            WindowSettings settings = new WindowSettings
+            {
+                windowPosX = windowRect.x,
+                windowPosY = windowRect.y,
+                detailWindowPosX = isDetailWindowVisible ? detailWindowRect.x : 0,
+                detailWindowPosY = isDetailWindowVisible ? detailWindowRect.y : 0,
+                detailWindowVisible = isDetailWindowVisible
+            };
+            
+            string json = JsonUtility.ToJson(settings, true);
+            EditorPrefs.SetString(windowSettingsKey, json);
         }
     }
 }
