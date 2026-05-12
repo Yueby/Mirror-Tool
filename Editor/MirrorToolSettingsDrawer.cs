@@ -11,17 +11,10 @@ namespace Yueby
         {
             this.Title = "Mirror Tool Settings";
 
-            // 设置窗口高度
             float lineHeight = EditorGUIUtility.singleLineHeight;
-            float spacing = 5f;
             float helpBoxHeight = 40f;
             float buttonHeight = 25f;
-
-            // 计算总高度
-            float totalHeight = lineHeight * 2 +     // 标题
-                              helpBoxHeight +        // HelpBox
-                              buttonHeight +         // 删除按钮
-                              EditorGUIUtility.singleLineHeight * 3;           // 间距
+            float totalHeight = lineHeight * 4 + helpBoxHeight * 2 + buttonHeight + lineHeight * 5;
 
             position = new Rect(0, 0, 300, totalHeight);
         }
@@ -30,7 +23,6 @@ namespace Yueby
         {
             EditorUI.VerticalEGL(() =>
             {
-                // 可视化设置
                 EditorUI.VerticalEGL(new GUIStyle("Badge"), () =>
                 {
                     EditorUI.TitleLabelField("Visualization");
@@ -41,7 +33,16 @@ namespace Yueby
 
                 EditorGUILayout.Space(5);
 
-                // 数据管理
+                EditorUI.VerticalEGL(new GUIStyle("Badge"), () =>
+                {
+                    EditorUI.TitleLabelField("Component Sync");
+                    MirrorTool.ComponentSyncEnabled = EditorUI.Toggle(MirrorTool.ComponentSyncEnabled, "Enable Component Sync");
+                    EditorGUILayout.Space(2);
+                    EditorGUILayout.HelpBox("Sync component property changes from source to mirror targets (matched by type and index)", MessageType.Info);
+                });
+
+                EditorGUILayout.Space(5);
+
                 EditorUI.VerticalEGL(new GUIStyle("Badge"), () =>
                 {
                     EditorUI.TitleLabelField("Data Management");
